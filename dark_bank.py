@@ -48,7 +48,8 @@ class DarkBank:
     - Transaction history with privacy
     """
     
-    # Total WBTC supply
+    # Total WBTC supply - Maximum amount of WBTC that can exist in the system
+    # This represents 500 trillion WBTC as specified in the Wbitcoin Blockchain
     TOTAL_SUPPLY = 500_000_000_000_000
     
     def __init__(self):

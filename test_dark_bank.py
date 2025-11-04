@@ -4,7 +4,7 @@ Tests for Dark Bank system
 
 import unittest
 import os
-import json
+import tempfile
 from dark_bank import DarkBank, Account, Transaction
 
 
@@ -201,24 +201,27 @@ class TestDarkBank(unittest.TestCase):
         account2 = self.bank.create_account(initial_deposit=500.0)
         self.bank.transfer(account1, account2, 200.0)
         
-        # Save state
-        test_file = '/tmp/test_dark_bank_state.json'
-        self.bank.save_state(test_file)
+        # Save state using tempfile for cross-platform compatibility
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            test_file = f.name
         
-        # Create new bank and load state
-        new_bank = DarkBank()
-        new_bank.load_state(test_file)
-        
-        # Verify state was restored
-        self.assertEqual(new_bank.get_total_accounts(), 2)
-        self.assertEqual(new_bank.get_total_transactions(), 3)  # 2 initial + 1 transfer
-        self.assertEqual(new_bank.get_balance(account1), 800.0)
-        self.assertEqual(new_bank.get_balance(account2), 700.0)
-        self.assertEqual(new_bank.total_deposited, 1500.0)
-        
-        # Clean up
-        if os.path.exists(test_file):
-            os.remove(test_file)
+        try:
+            self.bank.save_state(test_file)
+            
+            # Create new bank and load state
+            new_bank = DarkBank()
+            new_bank.load_state(test_file)
+            
+            # Verify state was restored
+            self.assertEqual(new_bank.get_total_accounts(), 2)
+            self.assertEqual(new_bank.get_total_transactions(), 3)  # 2 initial + 1 transfer
+            self.assertEqual(new_bank.get_balance(account1), 800.0)
+            self.assertEqual(new_bank.get_balance(account2), 700.0)
+            self.assertEqual(new_bank.total_deposited, 1500.0)
+        finally:
+            # Clean up
+            if os.path.exists(test_file):
+                os.remove(test_file)
     
     def test_unique_account_ids(self):
         """Test that account IDs are unique"""
